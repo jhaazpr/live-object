@@ -61,8 +61,8 @@ target/
 #Ipython Notebook
 .ipynb_checkpoints
 
-# Secret file
-secret.py
+# Vim
+*.swp
 
-# Twitter Data
-twitter_data.txt
+# Secret
+secret.py
