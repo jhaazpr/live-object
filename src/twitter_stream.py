@@ -4,8 +4,9 @@ from tweepy import OAuthHandler
 from tweepy import Stream
 
 # Utilities
+import json
 import time
-import pandas
+import pandas as pd
 import matplotlib.pyplot as plt
 
 # Access Variables. Required: secret.py
@@ -46,6 +47,22 @@ class AuthStream():
             f.close()
             print '\n\nRan stream for {} seconds'.format(time.time() - start_time)
 
+class TweetsParser():
+
+    def __init__(self, tweets_file_name):
+        self.tweets_data = []
+        self.tweets_file = open(tweets_file_name, 'r')
+        for line in self.tweets_file:
+            tweet = json.loads(line)
+            self.tweets_data.append(tweet)
+        except:
+            continue
+
+    def _word_in_text(self, word, text):
+        word = word.lower()
+        text = text.lower()
+        match = re.search(word, text)
+        return match
 
 # MAIN FUNCTION
 if __name__ == '__main__':
@@ -55,3 +72,4 @@ if __name__ == '__main__':
                              secret.access_token_key,
                              secret.access_token_secret)
     auth_stream.filter(['python, javascript', 'ruby'], '../data/twitter_data.txt')
+
