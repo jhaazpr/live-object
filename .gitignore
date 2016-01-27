@@ -60,3 +60,9 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+# Secret file
+secret.py
+
+# Twitter Data
+twitter_data.txt
