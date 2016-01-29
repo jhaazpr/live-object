@@ -63,13 +63,9 @@ class TweetsParser():
             except:
                 continue
 
-    def _word_in_text(self, word, text):
-        word = word.lower()
-        text = text.lower()
-        match = re.search(word, text)
-        if match:
-            return True
-        return False
+        # Result data
+        self.candidates = ['hilary', 'bernie', 'trump', 'cruz']
+        self.candidate_counts = []
 
     def do_lang(self):
         self.tweets['lang'] = map(lambda tweet: tweet['lang'], self.tweets_data)
@@ -84,38 +80,50 @@ class TweetsParser():
         self.tweets_by_lang[:5].plot(ax=ax, kind='bar', color='red')
         pylab.show()
 
-    def do_candidates(self):
-        candidates = ['hilary', 'bernie', 'trump', 'cruz']
+    def calc_candidate_counts(self):
         self.tweets['text'] = map(lambda tweet: tweet['text'], self.tweets_data)
 
+        # TODO: replace with better candidate recognition than just raw text e.g. #feelthebern
         self.tweets['hillary'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Hillary', tweet))
         self.tweets['bernie'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Bernie', tweet))
         self.tweets['trump'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Trump', tweet))
         self.tweets['cruz'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Cruz', tweet))
 
-        tweet_counts_by_candidate = [
+        self.candidate_counts = [
             self.tweets['hillary'].value_counts()[True],
             self.tweets['bernie'].value_counts()[True],
             self.tweets['trump'].value_counts()[True],
             self.tweets['cruz'].value_counts()[True]
         ]
 
-        print tweet_counts_by_candidate
+        return self.candidate_counts
 
+    def plot_candidates(self):
         # Draw plot
-        x_pos = list(range(len(candidates)))
+        x_pos = list(range(len(self.candidates)))
         width = 0.8
         fig, ax = plt.subplots()
-        plt.bar(x_pos, tweet_counts_by_candidate, width, alpha=1, color='g')
+        plt.bar(x_pos, self.candidate_counts, width, alpha=1, color='g')
 
         # Setting axis labels and ticks
         ax.set_ylabel('Number of tweets', fontsize=15)
         ax.set_title('Tweets by Candidate', fontsize=10, fontweight='bold')
         ax.set_xticks([p + 0.4 * width for p in x_pos])
-        ax.set_xticklabels(candidates)
+        ax.set_xticklabels(self.candidates)
         plt.grid()
         pylab.show()
 
+    def _word_in_text(self, word, text):
+        word = word.lower()
+        text = text.lower()
+        match = re.search(word, text)
+        if match:
+            return True
+        return False
+
+    def calc_normalize_counts(self):
+        total_tweets = float(reduce(lambda x, y: x + y, self.candidate_counts))
+        return [tweet_count / total_tweets for tweet_count in self.candidate_counts]
 
 # MAIN FUNCTION
 if __name__ == '__main__':
@@ -126,4 +134,8 @@ if __name__ == '__main__':
                              secret.access_token_secret)
     auth_stream.filter(['election', 'debate', 'usa', 'gop', 'democrat'], '../data/twitter_data.txt')
     tweet_parser = TweetsParser('../data/twitter_data.txt')
-    tweet_parser.do_candidates()
+    candidate_counts = tweet_parser.calc_candidate_counts()
+
+    # TODO: add command line args for plotting. For now, comment out if you don't want plots
+    print tweet_parser.calc_normalize_counts()
+    tweet_parser.plot_candidates()
