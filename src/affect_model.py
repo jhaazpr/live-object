@@ -1,8 +1,3 @@
-# Import Tweepy API components
-from tweepy.streaming import StreamListener
-from tweepy import OAuthHandler
-from tweepy import Stream
-
 # Utilities
 import json
 import re
@@ -10,46 +5,7 @@ import time
 import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
-
-# Access Variables. Required: secret.py
-# !!! Do not push secret.py to a public repository !!!
-import secret
-
 import pylab
-
-class StdOutListener(StreamListener):
-
-    def __init__(self, output_file):
-        self.output_file = output_file
-
-    def on_data(self, data):
-        self.output_file.write(data)
-        # print data
-        return True
-
-    def on_error(self, status):
-        print status
-
-class AuthStream():
-
-    def __init__(self, consumer_key, consumer_secret, access_token_key, \
-                 access_token_secret):
-        self.auth = OAuthHandler(consumer_key, consumer_secret)
-        self.auth.set_access_token(access_token_key, access_token_secret)
-
-    def filter(self, search_params, output_file_name):
-        f = open(output_file_name, 'a')
-        self.listener = StdOutListener(f)
-        self.stream = Stream(self.auth, self.listener)
-        start_time = time.time()
-        print 'Running stream with parameters {}.\n Saving to file: {} ...' \
-                .format(search_params, output_file_name)
-        try:
-            self.stream.filter(track=search_params)
-        except KeyboardInterrupt:
-            f.flush()
-            f.close()
-            print '\n\nRan stream for {} seconds'.format(time.time() - start_time)
 
 class TweetsParser():
 
@@ -131,23 +87,22 @@ class TweetsParser():
         total_tweets = float(reduce(lambda x, y: x + y, self.candidate_counts))
         return [tweet_count / total_tweets for tweet_count in self.candidate_counts]
 
+
 # MAIN FUNCTION
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser(description='Find tweet counts of candidates')
     parser.add_argument('candidates', metavar='C', type=str, nargs='+',
                         help='a candidate\'s name')
     args = parser.parse_args()
-    print 'Searching for tweets with these candidates: {}...'.format(args.candidates)
 
-    auth_stream = AuthStream(secret.consumer_key,
-                             secret.consumer_secret,
-                             secret.access_token_key,
-                             secret.access_token_secret)
-    auth_stream.filter(['election', 'debate', 'usa', 'gop', 'democrat'], '../data/twitter_data.txt')
-    tweet_parser = TweetsParser('../data/twitter_data.txt', args.candidates)
-    candidate_counts = tweet_parser.calc_candidate_counts()
+    tweets_parser = TweetsParser('../data/twitter_data.txt', args.candidates)
 
-    # TODO: add command line args for plotting. For now, comment out if you don't want plots
-    print tweet_parser.calc_normalize_counts()
-    tweet_parser.plot_candidates()
+    while True:
+        try:
+            candidate_counts = tweets_parser.calc_candidate_counts()
+            # TODO: add command line args for plotting. For now, comment out if you don't want plots
+            print tweets_parser.calc_normalize_counts()
+            # tweets_parser.plot_candidates()
+            time.sleep(5)
+        except KeyboardInterrupt:
+            exit()
