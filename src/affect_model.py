@@ -91,6 +91,12 @@ class TweetsParser():
 # MAIN FUNCTION
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Find tweet counts of candidates')
+    parser.add_argument('emotion', metavar='E', type=str, nargs='?', default='neutral',
+                        choices=['neutral', 'happy', 'angry'],
+                        help='how the fans should behave: neutral, happy (NYI), angry (NYI)')
+    parser.add_argument('feature', metavar='F', type=str, nargs='?', default='proportion',
+                        choices=['proportion', 'acceleration'],
+                        help='what should be measured from data: proportion, acceleration,')
     parser.add_argument('candidates', metavar='C', type=str, nargs='+',
                         help='a candidate\'s name')
     args = parser.parse_args()
