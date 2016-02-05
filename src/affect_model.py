@@ -9,12 +9,12 @@ import matplotlib.pyplot as plt
 import pylab
 
 # MongoDB
-from pymongo import MongoClient
+import pymongo
 
 class TweetsParser():
 
     def __init__(self, tweets_file_name, candidates):
-        self.db = MongoClient().test.tweets
+        self.db = pymongo.MongoClient().test.tweets
         self.tweets_data = []
         self.tweets = pd.DataFrame()
         self.tweets_file = open(tweets_file_name, 'r')
@@ -43,9 +43,23 @@ class TweetsParser():
         pylab.show()
 
     def calc_candidate_counts(self):
-        self.candidate_counts = [self.db.count({'text' : {'$regex' : candidate}}) \
+        self.candidate_counts = [self.db.count({'text' : {'$regex' : candidate }}) \
                                     for candidate in self.candidates]
         return self.candidate_counts
+
+    def calc_latest_tweet(self):
+        #TODO: not working, please fix
+        candidate_tweet_times = []
+        for candidate in self.candidates:
+            tweet = self.db.find_one({'text' : {'$regex' : candidate }})
+            ts = time.strftime('%Y-%m-%d %H:%M:%S', \
+                    time.strptime(tweet['created_at'],'%a %b %d %H:%M:%S +0000 %Y'))
+            candidate_tweet_times.append(ts)
+        print candidate_tweet_times
+        winning_index = candidate_tweet_times.index(max(candidate_tweet_times))
+        results = [0 for candidate in self.candidates]
+        results[winning_index] = 1.0
+        return results
 
     def plot_candidates(self):
         # Draw plot
@@ -85,7 +99,7 @@ if __name__ == '__main__':
                         choices=['neutral', 'happy', 'angry'],
                         help='how the fans should behave: neutral, happy (NYI), angry (NYI)')
     parser.add_argument('feature', metavar='F', type=str, nargs='?', default='proportion',
-                        choices=['proportion', 'acceleration'],
+                        choices=['proportion', 'acceleration', 'conversation'],
                         help='what should be measured from data: proportion, acceleration,')
     parser.add_argument('candidates', metavar='C', type=str, nargs='+',
                         help='a candidate\'s name')
@@ -103,9 +117,7 @@ if __name__ == '__main__':
     while True:
         if args.feature == 'proportion':
             candidate_counts = tweets_parser.calc_candidate_counts()
-            # TODO: add command line args for plotting. For now, comment out if you don't want plots
             print tweets_parser.normalize(candidate_counts)
-            # tweets_parser.plot_candidates()
             time.sleep(sleep_interval)
 
         if args.feature == 'acceleration':
@@ -123,4 +135,8 @@ if __name__ == '__main__':
             # TODO: deal with negative accelerations, for now take absolute values
             accelerations = map(abs, accelerations)
             print tweets_parser.normalize(accelerations)
+            time.sleep(sleep_interval)
+
+        if args.feature == 'conversation':
+            print tweets_parser.calc_latest_tweet()
             time.sleep(sleep_interval)
