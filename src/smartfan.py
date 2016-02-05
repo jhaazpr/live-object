@@ -7,20 +7,35 @@ class SmartFan:
 		# Establish the connection on a specific port
 		self.name = name
 		self.baudrate = 9600
-		# self.ser = serial.Serial(port, self.baudrate)
+		if not port: # no port, no physical fan
+			self.ser = None
+		else:
+			self.ser = serial.Serial(port, self.baudrate)
 
 	def off(self):
-		print "sent off to {}".format(self.name)
-		# self.ser.write(str(chr(0)))
+		if self.ser:
+			print "sent off to {}".format(self.name)
+			self.ser.write(str(chr(0)))
+		else:
+			print "would have sent off to {}".format(self.name)
 
 	def low(self):
-		print "sent low to {}".format(self.name)
-		# self.ser.write(str(chr(1)))
+		if self.ser:
+			print "sent low to {}".format(self.name)
+			self.ser.write(str(chr(1)))
+		else:
+			print "would have sent low to {}".format(self.name)
 
 	def med(self):
-		print "sent med to {}".format(self.name)
-		# self.ser.write(str(chr(2)))
+		if self.ser:
+			print "sent med to {}".format(self.name)
+			self.ser.write(str(chr(2)))
+		else:
+			print "would have sent med to {}".format(self.name)
 
 	def high(self):
-		print "sent high to {}".format(self.name)
-		# self.ser.write(str(chr(3)))
+		if self.ser:
+			print "sent high to {}".format(self.name)
+			self.ser.write(str(chr(3)))
+		else:
+			print "would have sent high to {}".format(self.name)

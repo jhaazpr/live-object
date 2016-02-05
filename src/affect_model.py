@@ -34,7 +34,7 @@ class TweetsParser():
         #TODO: scale
         self.fans = [
             SmartFan(candidates[0], '/dev/tty.usbmodem1411'),
-            SmartFan(candidates[1], '/dev/tty.usbmodem1451')
+            SmartFan(candidates[1], None)
         ]
 
     def do_lang(self):
@@ -136,42 +136,47 @@ if __name__ == '__main__':
     sleep_interval = 2
 
     while True:
-        if args.feature == 'proportion':
-            candidate_counts = tweets_parser.calc_candidate_counts()
-            t =  tweets_parser.normalize(candidate_counts)
-            tweets_parser.map_values_to_fans(candidate_counts)
-            print t
-            time.sleep(sleep_interval)
+        try:
+            if args.feature == 'proportion':
+                candidate_counts = tweets_parser.calc_candidate_counts()
+                t =  tweets_parser.normalize(candidate_counts)
+                tweets_parser.map_values_to_fans(candidate_counts)
+                print t
+                time.sleep(sleep_interval)
 
-        if args.feature == 'acceleration':
-            # Update the average velocity from the start
-            curr_counts = tweets_parser.calc_candidate_counts()
-            total_counts = map(sub, curr_counts, start_counts)
-            elapsed_time = time.time() - start_time
-            fresh_velocities = [count / elapsed_time for count in total_counts]
+            if args.feature == 'acceleration':
+                # Update the average velocity from the start
+                curr_counts = tweets_parser.calc_candidate_counts()
+                total_counts = map(sub, curr_counts, start_counts)
+                elapsed_time = time.time() - start_time
+                fresh_velocities = [count / elapsed_time for count in total_counts]
 
-            # Calculate change in velocity over last interval
-            velocity_changes = map(sub, fresh_velocities, curr_velocities)
-            accelerations = [change / sleep_interval for change in velocity_changes]
-            curr_velocities = fresh_velocities
+                # Calculate change in velocity over last interval
+                velocity_changes = map(sub, fresh_velocities, curr_velocities)
+                accelerations = [change / sleep_interval for change in velocity_changes]
+                curr_velocities = fresh_velocities
 
-            # TODO: deal with negative accelerations, for now take absolute values
-            accelerations = map(abs, accelerations)
-            norm_accels = tweets_parser.normalize(accelerations)
-            tweets_parser.map_values_to_fans(norm_accels)
-            print norm_accels
-            time.sleep(sleep_interval)
+                # TODO: deal with negative accelerations, for now take absolute values
+                accelerations = map(abs, accelerations)
+                norm_accels = tweets_parser.normalize(accelerations)
+                tweets_parser.map_values_to_fans(norm_accels)
+                print norm_accels
+                time.sleep(sleep_interval)
 
-        if args.feature == 'conversation':
-            speaking_time = 1
-            assert speaking_time < sleep_interval
+            if args.feature == 'conversation':
+                speaking_time = 1
+                assert speaking_time < sleep_interval
 
-            # Turn the 'winning' fan on for SPEAKING_TIME seconds
-            t = tweets_parser.calc_latest_tweet()
-            tweets_parser.map_values_to_fans(t)
-            time.sleep(speaking_time)
-            print t
+                # Turn the 'winning' fan on for SPEAKING_TIME seconds
+                t = tweets_parser.calc_latest_tweet()
+                tweets_parser.map_values_to_fans(t)
+                time.sleep(speaking_time)
+                print t
 
-            # Turn all fans off and wait for the rest of the interval
+                # Turn all fans off and wait for the rest of the interval
+                tweets_parser.map_values_to_fans([0 for c in tweets_parser.candidates])
+                time.sleep(sleep_interval - speaking_time)
+        except KeyboardInterrupt:
+            print 'Turning all fans off...'
             tweets_parser.map_values_to_fans([0 for c in tweets_parser.candidates])
-            time.sleep(sleep_interval - speaking_time)
+            exit()
