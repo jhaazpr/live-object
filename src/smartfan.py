@@ -1,18 +1,26 @@
 from time import sleep
 import serial
-ser = serial.Serial('/dev/tty.usbmodem1411', 9600) # Establish the connection on a specific port
 
+class SmartFan:
 
+	def __init__(self, name='fan', port='/dev/tty.usbmodem1411'):
+		# Establish the connection on a specific port
+		self.name = name
+		self.baudrate = 9600
+		# self.ser = serial.Serial(port, self.baudrate)
 
-def off():
-	print "sent off"!
-	ser.write(str(chr(0))) 
-def low():
-	print "sent low"!
-	ser.write(str(chr(1))) 
-def med():
-	print "sent med"!
-	ser.write(str(chr(2))) 
-def high():
-	print "sent high!"
-	ser.write(str(chr(3))) 
+	def off(self):
+		print "sent off to {}".format(self.name)
+		# self.ser.write(str(chr(0)))
+
+	def low(self):
+		print "sent low to {}".format(self.name)
+		# self.ser.write(str(chr(1)))
+
+	def med(self):
+		print "sent med to {}".format(self.name)
+		# self.ser.write(str(chr(2)))
+
+	def high(self):
+		print "sent high to {}".format(self.name)
+		# self.ser.write(str(chr(3)))

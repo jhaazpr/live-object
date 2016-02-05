@@ -11,6 +11,9 @@ import pylab
 # MongoDB
 import pymongo
 
+# Objects
+from smartfan import SmartFan
+
 class TweetsParser():
 
     def __init__(self, tweets_file_name, candidates):
@@ -28,6 +31,11 @@ class TweetsParser():
         # Result data
         self.candidates = candidates
         self.candidate_counts = []
+        #TODO: scale
+        self.fans = [
+            SmartFan(candidates[0], '/dev/tty.usbmodem1411'),
+            SmartFan(candidates[1], '/dev/tty.usbmodem1451')
+        ]
 
     def do_lang(self):
         self.tweets['lang'] = map(lambda tweet: tweet['lang'], self.tweets_data)
@@ -76,13 +84,22 @@ class TweetsParser():
         plt.grid()
         pylab.show()
 
-    def _word_in_text(self, word, text):
-        word = word.lower()
-        text = text.lower()
-        match = re.search(word, text)
-        if match:
-            return True
-        return False
+    def map_values_to_fans(self, values):
+        '''
+        Values must be normalized
+        '''
+        for value in enumerate(values):
+            if value[0] > len(values) - 1:
+                return
+
+            if value[1] < 0.25:
+                self.fans[value[0]].off();
+            elif value[1] >= 0.25 and value < 0.5:
+                self.fans[value[0]].low();
+            elif value[1] >= 0.5 and value < 0.75:
+                self.fans[value[0]].med();
+            elif value[1] >= 0.75:
+                self.fans[value[0]].high();
 
     @staticmethod
     def normalize(values):
@@ -90,6 +107,10 @@ class TweetsParser():
         if total == 0:
             return values
         return [value / total for value in values]
+
+
+#TODO: OOPify this
+fans = [SmartFan(), SmartFan()]
 
 
 # MAIN FUNCTION
@@ -117,7 +138,9 @@ if __name__ == '__main__':
     while True:
         if args.feature == 'proportion':
             candidate_counts = tweets_parser.calc_candidate_counts()
-            print tweets_parser.normalize(candidate_counts)
+            t =  tweets_parser.normalize(candidate_counts)
+            tweets_parser.map_values_to_fans(candidate_counts)
+            print t
             time.sleep(sleep_interval)
 
         if args.feature == 'acceleration':
@@ -134,9 +157,13 @@ if __name__ == '__main__':
 
             # TODO: deal with negative accelerations, for now take absolute values
             accelerations = map(abs, accelerations)
-            print tweets_parser.normalize(accelerations)
+            norm_accels = tweets_parser.normalize(accelerations)
+            tweets_parser.map_values_to_fans(norm_accels)
+            print norm_accels
             time.sleep(sleep_interval)
 
         if args.feature == 'conversation':
-            print tweets_parser.calc_latest_tweet()
+            t = tweets_parser.calc_latest_tweet()
+            tweets_parser.map_values_to_fans(t)
+            print t
             time.sleep(sleep_interval)
