@@ -7,6 +7,7 @@ from tweepy import Stream
 import json
 import re
 import time
+import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -52,7 +53,7 @@ class AuthStream():
 
 class TweetsParser():
 
-    def __init__(self, tweets_file_name):
+    def __init__(self, tweets_file_name, candidates):
         self.tweets_data = []
         self.tweets = pd.DataFrame()
         self.tweets_file = open(tweets_file_name, 'r')
@@ -64,7 +65,7 @@ class TweetsParser():
                 continue
 
         # Result data
-        self.candidates = ['hilary', 'bernie', 'trump', 'cruz']
+        self.candidates = candidates
         self.candidate_counts = []
 
     def do_lang(self):
@@ -84,17 +85,22 @@ class TweetsParser():
         self.tweets['text'] = map(lambda tweet: tweet['text'], self.tweets_data)
 
         # TODO: replace with better candidate recognition than just raw text e.g. #feelthebern
-        self.tweets['hillary'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Hillary', tweet))
-        self.tweets['bernie'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Bernie', tweet))
-        self.tweets['trump'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Trump', tweet))
-        self.tweets['cruz'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Cruz', tweet))
+        # self.tweets['hillary'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Hillary', tweet))
+        # self.tweets['bernie'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Bernie', tweet))
+        # self.tweets['trump'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Trump', tweet))
+        # self.tweets['cruz'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Cruz', tweet))
 
-        self.candidate_counts = [
-            self.tweets['hillary'].value_counts()[True],
-            self.tweets['bernie'].value_counts()[True],
-            self.tweets['trump'].value_counts()[True],
-            self.tweets['cruz'].value_counts()[True]
-        ]
+        for candidate in self.candidates:
+            self.tweets[candidate] = self.tweets['text'].apply(lambda tweet: self._word_in_text(candidate, tweet))
+
+        # self.candidate_counts = [
+        #     self.tweets['hillary'].value_counts()[True],
+        #     self.tweets['bernie'].value_counts()[True],
+        #     self.tweets['trump'].value_counts()[True],
+        #     self.tweets['cruz'].value_counts()[True]
+        # ]
+
+        self.candidate_counts = [self.tweets[candidate].value_counts()[True] for candidate in self.candidates]
 
         return self.candidate_counts
 
@@ -128,12 +134,18 @@ class TweetsParser():
 # MAIN FUNCTION
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser(description='Find tweet counts of candidates')
+    parser.add_argument('candidates', metavar='C', type=str, nargs='+',
+                        help='a candidate\'s name')
+    args = parser.parse_args()
+    print 'Searching for tweets with these candidates: {}...'.format(args.candidates)
+
     auth_stream = AuthStream(secret.consumer_key,
                              secret.consumer_secret,
                              secret.access_token_key,
                              secret.access_token_secret)
     auth_stream.filter(['election', 'debate', 'usa', 'gop', 'democrat'], '../data/twitter_data.txt')
-    tweet_parser = TweetsParser('../data/twitter_data.txt')
+    tweet_parser = TweetsParser('../data/twitter_data.txt', args.candidates)
     candidate_counts = tweet_parser.calc_candidate_counts()
 
     # TODO: add command line args for plotting. For now, comment out if you don't want plots
