@@ -1,4 +1,5 @@
 # Utilities
+from operator import add, sub
 import json
 import re
 import time
@@ -103,12 +104,30 @@ if __name__ == '__main__':
 
     tweets_parser = TweetsParser('../data/twitter_data.txt', args.candidates)
 
+    # Variables needed for feature calculation
+    start_time = time.time()
+    start_counts = tweets_parser.calc_candidate_counts()
+    current_counts = start_counts
+    sleep_interval = 5
+
     while True:
-        try:
-            candidate_counts = tweets_parser.calc_candidate_counts()
-            # TODO: add command line args for plotting. For now, comment out if you don't want plots
-            print tweets_parser.calc_normalize_counts()
-            # tweets_parser.plot_candidates()
-            time.sleep(5)
-        except KeyboardInterrupt:
-            exit()
+        if args.feature == 'proportion':
+            try:
+                candidate_counts = tweets_parser.calc_candidate_counts()
+                # TODO: add command line args for plotting. For now, comment out if you don't want plots
+                print tweets_parser.calc_normalize_counts()
+                # tweets_parser.plot_candidates()
+                time.sleep(sleep_interval)
+            except KeyboardInterrupt:
+                exit()
+        if args.feature == 'acceleration':
+            try:
+                current_counts = tweets_parser.calc_candidate_counts()
+                total_counts = map(sub, current_counts, start_counts)
+                print current_counts
+                elapsed_time = time.time() - start_time
+                velocities = [count / elapsed_time for count in total_counts]
+                print velocities
+                time.sleep(sleep_interval)
+            except KeyboardInterrupt:
+                exit()
