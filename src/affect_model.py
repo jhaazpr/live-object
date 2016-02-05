@@ -45,7 +45,6 @@ class TweetsParser():
     def calc_candidate_counts(self):
         self.candidate_counts = [self.db.count({'text' : {'$regex' : candidate}}) \
                                     for candidate in self.candidates]
-
         return self.candidate_counts
 
     def plot_candidates(self):
@@ -71,9 +70,12 @@ class TweetsParser():
             return True
         return False
 
-    def calc_normalize_counts(self):
-        total_tweets = float(reduce(lambda x, y: x + y, self.candidate_counts))
-        return [tweet_count / total_tweets for tweet_count in self.candidate_counts]
+    @staticmethod
+    def normalize(values):
+        total = float(reduce(lambda x, y: x + y, values))
+        if total == 0:
+            return values
+        return [value / total for value in values]
 
 
 # MAIN FUNCTION
@@ -94,27 +96,31 @@ if __name__ == '__main__':
     # Variables needed for feature calculation
     start_time = time.time()
     start_counts = tweets_parser.calc_candidate_counts()
-    current_counts = start_counts
-    sleep_interval = 5
+    curr_counts = start_counts
+    curr_velocities = [0 for candidate in tweets_parser.candidates]
+    sleep_interval = 1
 
     while True:
         if args.feature == 'proportion':
-            try:
-                candidate_counts = tweets_parser.calc_candidate_counts()
-                # TODO: add command line args for plotting. For now, comment out if you don't want plots
-                print tweets_parser.calc_normalize_counts()
-                # tweets_parser.plot_candidates()
-                time.sleep(sleep_interval)
-            except KeyboardInterrupt:
-                exit()
+            candidate_counts = tweets_parser.calc_candidate_counts()
+            # TODO: add command line args for plotting. For now, comment out if you don't want plots
+            print tweets_parser.normalize(candidate_counts)
+            # tweets_parser.plot_candidates()
+            time.sleep(sleep_interval)
+
         if args.feature == 'acceleration':
-            try:
-                current_counts = tweets_parser.calc_candidate_counts()
-                total_counts = map(sub, current_counts, start_counts)
-                print current_counts
-                elapsed_time = time.time() - start_time
-                velocities = [count / elapsed_time for count in total_counts]
-                print velocities
-                time.sleep(sleep_interval)
-            except KeyboardInterrupt:
-                exit()
+            # Update the average velocity from the start
+            curr_counts = tweets_parser.calc_candidate_counts()
+            total_counts = map(sub, curr_counts, start_counts)
+            elapsed_time = time.time() - start_time
+            fresh_velocities = [count / elapsed_time for count in total_counts]
+
+            # Calculate change in velocity over last interval
+            velocity_changes = map(sub, fresh_velocities, curr_velocities)
+            accelerations = [change / sleep_interval for change in velocity_changes]
+            curr_velocities = fresh_velocities
+
+            # TODO: deal with negative accelerations, for now take absolute values
+            accelerations = map(abs, accelerations)
+            print tweets_parser.normalize(accelerations)
+            time.sleep(sleep_interval)
