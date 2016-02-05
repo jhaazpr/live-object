@@ -3,20 +3,26 @@ from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
 
+# MongoDB
+from pymongo import MongoClient
+
 import argparse
 import time
+import json
 
 # Access Variables. Required: secret.py
 # !!! Do not push secret.py to a public repository !!!
 import secret
 
-class StdOutListener(StreamListener):
+class Listener(StreamListener):
 
-    def __init__(self, output_file):
-        self.output_file = output_file
+    def __init__(self, db):
+        self.db = db
 
     def on_data(self, data):
-        self.output_file.write(data)
+        # self.output_file.write(data)
+        tweet = json.loads(data)
+        self.db.insert(tweet)
         # print data
         return True
 
@@ -29,19 +35,18 @@ class TweetStream():
                  access_token_secret):
         self.auth = OAuthHandler(consumer_key, consumer_secret)
         self.auth.set_access_token(access_token_key, access_token_secret)
+        self.db = DB = MongoClient().test.tweets
 
-    def filter(self, search_params, output_file_name):
-        f = open(output_file_name, 'a')
-        self.listener = StdOutListener(f)
+    def filter(self, search_params):
+        self.listener = Listener(self.db)
         self.stream = Stream(self.auth, self.listener)
         start_time = time.time()
-        print 'Running stream with parameters {}.\n Saving to file: {} ...' \
-                .format(search_params, output_file_name)
+        print 'Running stream with parameters {}.\n \
+                Saving to MongoDB collection: db.test.tweets' \
+                .format(search_params)
         try:
             self.stream.filter(track=search_params)
         except KeyboardInterrupt:
-            f.flush()
-            f.close()
             print '\n\nRan stream for {} seconds'.format(time.time() - start_time)
 
 # MAIN FUNCTION
@@ -57,4 +62,4 @@ if __name__ == '__main__':
                              secret.consumer_secret,
                              secret.access_token_key,
                              secret.access_token_secret)
-    tweet_stream.filter(args.subjects, '../data/twitter_data.txt')
+    tweet_stream.filter(args.subjects)

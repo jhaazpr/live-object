@@ -8,9 +8,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pylab
 
+# MongoDB
+from pymongo import MongoClient
+
 class TweetsParser():
 
     def __init__(self, tweets_file_name, candidates):
+        self.db = MongoClient().test.tweets
         self.tweets_data = []
         self.tweets = pd.DataFrame()
         self.tweets_file = open(tweets_file_name, 'r')
@@ -39,25 +43,8 @@ class TweetsParser():
         pylab.show()
 
     def calc_candidate_counts(self):
-        self.tweets['text'] = map(lambda tweet: tweet['text'], self.tweets_data)
-
-        # TODO: replace with better candidate recognition than just raw text e.g. #feelthebern
-        # self.tweets['hillary'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Hillary', tweet))
-        # self.tweets['bernie'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Bernie', tweet))
-        # self.tweets['trump'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Trump', tweet))
-        # self.tweets['cruz'] = self.tweets['text'].apply(lambda tweet: self._word_in_text('Cruz', tweet))
-
-        for candidate in self.candidates:
-            self.tweets[candidate] = self.tweets['text'].apply(lambda tweet: self._word_in_text(candidate, tweet))
-
-        # self.candidate_counts = [
-        #     self.tweets['hillary'].value_counts()[True],
-        #     self.tweets['bernie'].value_counts()[True],
-        #     self.tweets['trump'].value_counts()[True],
-        #     self.tweets['cruz'].value_counts()[True]
-        # ]
-
-        self.candidate_counts = [self.tweets[candidate].value_counts()[True] for candidate in self.candidates]
+        self.candidate_counts = [self.db.count({'text' : {'$regex' : candidate}}) \
+                                    for candidate in self.candidates]
 
         return self.candidate_counts
 
