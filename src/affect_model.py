@@ -94,9 +94,9 @@ class TweetsParser():
 
             if value[1] < 0.25:
                 self.fans[value[0]].off();
-            elif value[1] >= 0.25 and value < 0.5:
+            elif value[1] >= 0.25 and value[1] < 0.5:
                 self.fans[value[0]].low();
-            elif value[1] >= 0.5 and value < 0.75:
+            elif value[1] >= 0.5 and value[1] < 0.75:
                 self.fans[value[0]].med();
             elif value[1] >= 0.75:
                 self.fans[value[0]].high();
@@ -133,7 +133,7 @@ if __name__ == '__main__':
     start_counts = tweets_parser.calc_candidate_counts()
     curr_counts = start_counts
     curr_velocities = [0 for candidate in tweets_parser.candidates]
-    sleep_interval = 1
+    sleep_interval = 2
 
     while True:
         if args.feature == 'proportion':
@@ -163,7 +163,15 @@ if __name__ == '__main__':
             time.sleep(sleep_interval)
 
         if args.feature == 'conversation':
+            speaking_time = 1
+            assert speaking_time < sleep_interval
+
+            # Turn the 'winning' fan on for SPEAKING_TIME seconds
             t = tweets_parser.calc_latest_tweet()
             tweets_parser.map_values_to_fans(t)
+            time.sleep(speaking_time)
             print t
-            time.sleep(sleep_interval)
+
+            # Turn all fans off and wait for the rest of the interval
+            tweets_parser.map_values_to_fans([0 for c in tweets_parser.candidates])
+            time.sleep(sleep_interval - speaking_time)
