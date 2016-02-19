@@ -34,7 +34,7 @@ class TweetsParser():
         #TODO: scale
         self.fans = [
             SmartFan(candidates[0], '/dev/tty.usbmodem1411'),
-            SmartFan(candidates[1], None)
+            SmartFan(candidates[1], '/dev/tty.usbmodem1421')
         ]
 
     def do_lang(self):
@@ -108,9 +108,6 @@ class TweetsParser():
             return values
         return [value / total for value in values]
 
-
-#TODO: OOPify this
-fans = [SmartFan(), SmartFan()]
 
 
 # MAIN FUNCTION
