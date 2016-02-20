@@ -3,6 +3,7 @@ from operator import add, sub
 import json
 import re
 import time
+import datetime
 import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -33,8 +34,8 @@ class TweetsParser():
         self.candidate_counts = []
         #TODO: scale
         self.fans = [
-            SmartFan(candidates[0], '/dev/tty.usbmodem1411'),
-            SmartFan(candidates[1], '/dev/tty.usbmodem1421')
+            SmartFan(candidates[0], None),
+            SmartFan(candidates[1], None)
         ]
 
     def do_lang(self):
@@ -132,6 +133,9 @@ if __name__ == '__main__':
     curr_velocities = [0 for candidate in tweets_parser.candidates]
     sleep_interval = 2
 
+    # Open a log for the data
+    f = open('../data/log-{}'.format(datetime.datetime.now()), 'a')
+
     while True:
         try:
             if args.feature == 'proportion':
@@ -139,6 +143,7 @@ if __name__ == '__main__':
                 t =  tweets_parser.normalize(candidate_counts)
                 tweets_parser.map_values_to_fans(candidate_counts)
                 print t
+                f.write(t)
                 time.sleep(sleep_interval)
 
             if args.feature == 'acceleration':
@@ -158,6 +163,7 @@ if __name__ == '__main__':
                 norm_accels = tweets_parser.normalize(accelerations)
                 tweets_parser.map_values_to_fans(norm_accels)
                 print norm_accels
+                f.write('{} : {}\n'.format(datetime.datetime.now(), norm_accels))
                 time.sleep(sleep_interval)
 
             if args.feature == 'conversation':
@@ -176,4 +182,6 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             print 'Turning all fans off...'
             tweets_parser.map_values_to_fans([0 for c in tweets_parser.candidates])
+            f.flush()
+            f.close()
             exit()

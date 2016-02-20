@@ -1,4 +1,4 @@
-# Live Object 
+# Live Object
 Quasi-library for animating Internet of Things objects based on web data
 
 ### Getting Started
@@ -9,7 +9,7 @@ Quasi-library for animating Internet of Things objects based on web data
     `$ pip install pandas`
 
     `$ pip install pymongo`
-    
+
     More information about hooking up the Python wrapper for MongoDB
     can be found [here](https://docs.mongodb.org/getting-started/python/client/).
     You may need to do additional installs if the script complains.
@@ -19,7 +19,7 @@ Quasi-library for animating Internet of Things objects based on web data
 
 3. Run `$ mongod` in another tab.
 
-4. Navigate to src/ . Run `python twitter_stream.py [arg_1 ... arg_n]`. 
+4. Navigate to src/ . Run `python twitter_stream.py [arg_1 ... arg_n]`.
    The script will begin scraping twitter for tweets with
    `arg_i` and save matching tweets to the running MongoDB
    instance. This is our data stream.
@@ -27,8 +27,8 @@ Quasi-library for animating Internet of Things objects based on web data
 5. Go to the following piece of code in `affect_model.py`
 
 `        self.fans = [
-            SmartFan(candidates[0], '/dev/tty.usbmodem1411'),
-            SmartFan(candidates[1], '/dev/tty.usbmodem1421')
+            SmartFan(candidates[0], {{ PORT }}),
+            SmartFan(candidates[1], {{ PORT }})
          ]
 `
    And change the port numbers (second argument) to match those
@@ -38,6 +38,5 @@ Quasi-library for animating Internet of Things objects based on web data
    replace the candidates' names to any candidate. This should be done
    while the data stream is running. The program will continuously print
    the tweet acceleration and pipe fan strengths to the fans. Be patient
-   at first; the accelerations will be 0.0 for the first couple of 
+   at first; the accelerations will be 0.0 for the first couple of
    seconds.
-
