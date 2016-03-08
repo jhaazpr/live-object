@@ -34,8 +34,8 @@ class TweetsParser():
         self.candidate_counts = []
         #TODO: scale
         self.fans = [
-            SmartFan(candidates[0], None),
-            SmartFan(candidates[1], None)
+            SmartFan(candidates[0], port='/dev/tty.usbmodem1411'),
+            SmartFan(candidates[1], port='/dev/tty.usbmodem1421')
         ]
 
     def do_lang(self):
@@ -134,7 +134,7 @@ if __name__ == '__main__':
     sleep_interval = 2
 
     # Open a log for the data
-    f = open('../data/log-{}'.format(datetime.datetime.now()), 'a')
+    f = open('../data/log-{}.txt'.format(datetime.datetime.now()), 'a')
 
     while True:
         try:
