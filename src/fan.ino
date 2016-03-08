@@ -13,7 +13,7 @@
   by Scott Fitzgerald
  */
 
-int incomingByte = 0;  
+int incomingByte = 0;
 int high = 6;
 int med = 7;
 int low = 5;

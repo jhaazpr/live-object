@@ -5,7 +5,7 @@ import re
 import time
 import datetime
 import argparse
-import pandas as pd
+# import pandas as pd
 import matplotlib.pyplot as plt
 import pylab
 
@@ -20,7 +20,6 @@ class TweetsParser():
     def __init__(self, tweets_file_name, candidates):
         self.db = pymongo.MongoClient().test.tweets
         self.tweets_data = []
-        self.tweets = pd.DataFrame()
         self.tweets_file = open(tweets_file_name, 'r')
         for line in self.tweets_file:
             try:
@@ -34,8 +33,9 @@ class TweetsParser():
         self.candidate_counts = []
         #TODO: scale
         self.fans = [
-            SmartFan(candidates[0], port='/dev/tty.usbmodem1411'),
-            SmartFan(candidates[1], port='/dev/tty.usbmodem1421')
+            SmartFan(candidates[0], "/dev/tty.HC-06-DevB"),
+            SmartFan(candidates[1], "/dev/tty.HC-06-DevB-1") 
+            # SmartFan(candidates[2],"/dev/tty.HC-06-DevB-"),       
         ]
 
     def do_lang(self):
