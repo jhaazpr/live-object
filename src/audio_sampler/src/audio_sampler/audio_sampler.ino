@@ -66,10 +66,10 @@ void setup() {
 void loop() {
   unsigned long startMillis= millis();  // Start of sample window
 	double volts = audioSample(startMillis);
-  Serial.print("Volts: ");
-	Serial.println(volts);
-  Serial.print("Window: ");
-  Serial.println(currWindow);
+//  Serial.print("Volts: ");
+//	Serial.println(volts);
+//  Serial.print("Window: ");
+//  Serial.println(currWindow);
 
   if (++currWindow > windowSize)
   {
@@ -127,7 +127,12 @@ void printThresh(float *unused) {
 
 void sendAudio(float *average) {
   //TODO: send average over serial, marshalling to be decided
+  long normalizedAvg = *average * 100;
+  normalizedAvg = constrain(normalizedAvg, 0, 100);
+  normalizedAvg = map(normalizedAvg, 0, 100, 0, 1000);
   Serial.print("*********Boutta send some audio: ");
+  Serial.print(normalizedAvg);
+  Serial.print(", from unnormalized: ");
   Serial.print(*average);
   Serial.println("*********");
 }
